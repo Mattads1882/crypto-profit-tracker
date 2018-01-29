@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>priceTracker</title>
+    <link rel="stylesheet" type="text/css" href="priceTracker.css">
+</head>
+
+<body>
+
+<table class="tg" id="priceTable">
+    <tr>
+        <th class="tg-020d">Holdings<br></th>
+        <th class="tg-9hbo">Coin</th>
+        <th class="tg-9hbo">Average Purchase Price</th>
+        <th class="tg-9hbo">Invested</th>
+        <th class="tg-9hbo">Current Price</th>
+        <th class="tg-9hbo">Current Value</th>
+        <th class="tg-9hbo">Profit</th>
+        <th class="tg-9hbo">Growth</th>
+        <th class="tg-9hbo">Profit Taken</th>
+    </tr>
+    <tr>
+        <td class="tg-baqh" contenteditable="true" onblur="updateBTCPrice()">1.0</td>
+        <td class="tg-yw4l">Bitcoin</td>
+        <td class="tg-yw4l"></td>
+        <td class="tg-baqh" contenteditable="true" onblur="updateBTCPrice()">7000</td>
+        <td class="tg-baqh" id="bitcoinPrice"></td>
+        <td class="tg-baqh"></td>
+        <td class="tg-baqh"></td>
+        <td class="tg-lqy6"></td>
+        <td class="tg-baqh" contenteditable="true">0</td>
+    </tr>
+    <tr>
+        <td class="tg-baqh" contenteditable="true" onblur="updateBCHPrice()">1.0</td>
+        <td class="tg-yw4l">Bitcoin Cash<br></td>
+        <td class="tg-yw4l"></td>
+        <td class="tg-baqh" contenteditable="true" onblur="updateBCHPrice()">1000</td>
+        <td class="tg-baqh" id="bitcoinCashPrice"></td>
+        <td class="tg-baqh" ></td>
+        <td class="tg-baqh"></td>
+        <td class="tg-lqy6"></td>
+        <td class="tg-baqh" contenteditable="true">0</td>
+    </tr>
+</table>
+
+<div id="profitDiv">
+
+</div>
+
+</body>
+
+<script>
+var BTCPriceEUR = 0;
+var BTCPriceUSD = 0;
+var BCHPriceEUR = 0;
+var BCHPriceUSD = 0;
+var BTCProfit = 0;
+var BCHProfit = 0;
+var TotalProfit = 0;
+
+var HttpClient = function() {
+    this.get = function(aUrl, aCallback) {
+        var anHttpRequest = new XMLHttpRequest();
+        anHttpRequest.onreadystatechange = function() {
+            if (anHttpRequest.readyState == 4 && anHttpRequest.status == 200)
+                aCallback(anHttpRequest.responseText);
+        }
+
+        anHttpRequest.open( "GET", aUrl, true );
+        anHttpRequest.send( null );
+    }
+}
+
+updateBTCPrice(); // first update
+updateBCHPrice(); // first update
+intervalFunction();
+
+function intervalFunction() {
+    myVar = setInterval(updateBTCPrice, 30000); // update every 30 seconds
+    myVar1 = setInterval(updateBCHPrice, 30000); // update every 30 seconds
+}
+
+
+function updateBTCPrice(){
+    var client = new HttpClient();
+    client.get('https://api.coinmarketcap.com/v1/ticker/bitcoin/?convert=EUR', function(response) {
+
+       resultsArray = JSON.parse(response);
+       BTCPriceEUR = resultsArray[0].price_eur;
+       BTCPriceUSD = resultsArray[0].price_usd;
+       BTCValue = document.getElementById("bitcoinPrice");
+       BTCValue.innerHTML = Number(BTCPriceEUR).toFixed(2);
+
+       var table = document.getElementById("priceTable");
+       for (var i = 0, row; row = table.rows[i]; i++) {
+
+            for (var j = 0, cell; cell = row.cells[j]; j++) {
+
+                if(i == 1 && j == 0)
+                {
+                    var holdings = row.cells[0].innerHTML;
+                    var average = row.cells[2].innerHTML;
+                    var invested = row.cells[3].innerHTML;
+                    var price = row.cells[4].innerHTML;
+                    var value = row.cells[5].innerHTML;
+                    var profit = row.cells[6].innerHTML;
+                    var growth = row.cells[7].innerHTML;
+
+                    row.cells[2].innerHTML = (invested / holdings).toFixed(2);
+                    row.cells[5].innerHTML = (holdings * price).toFixed(2);
+
+                    average = row.cells[2].innerHTML;
+                    value = row.cells[5].innerHTML;
+
+                    BTCProfit = (value - invested).toFixed(2); // for total profit
+                    var profitDIV = document.getElementById("profitDiv");
+                    profitDIV.innerHTML = "Total profit = " + (parseInt(BTCProfit) + parseInt(BCHProfit));
+
+                    if(parseInt(value) >  parseInt(invested)){
+
+                        row.cells[6].innerHTML = "+" + (value - invested).toFixed(2);
+                        row.cells[7].innerHTML = ((((value - invested).toFixed(2)) / invested) * 100).toFixed(2) + "%";
+                        for(i=0;i<9;i++){
+                            row.cells[i].style.background = "LawnGreen";
+                        }
+                    }
+                    else{
+
+                        row.cells[6].innerHTML = "-" + (invested - value).toFixed(2);
+                        row.cells[7].innerHTML = "-" + ((((invested - value).toFixed(2)) / invested) * 100).toFixed(2) + "%";
+                        for(i=0;i<9;i++){
+                            row.cells[i].style.background = "Red";
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function updateBCHPrice(){
+    var client = new HttpClient();
+    client.get('https://api.coinmarketcap.com/v1/ticker/bitcoin-cash/?convert=EUR', function(response) {
+
+       resultsArray = JSON.parse(response);
+       BCHPriceEUR = resultsArray[0].price_eur;
+       BCHPriceUSD = resultsArray[0].price_usd;
+       BCHValue = document.getElementById("bitcoinCashPrice");
+       BCHValue.innerHTML = Number(BCHPriceEUR).toFixed(2);
+
+       var table = document.getElementById("priceTable");
+       for (var i = 0, row; row = table.rows[i]; i++) {
+
+            for (var j = 0, cell; cell = row.cells[j]; j++) {
+
+                if(i == 2 && j == 0)
+                {
+                    var holdings = row.cells[0].innerHTML;
+                    var average = row.cells[2].innerHTML;
+                    var invested = row.cells[3].innerHTML;
+                    var price = row.cells[4].innerHTML;
+                    var value = row.cells[5].innerHTML;
+                    var profit = row.cells[6].innerHTML;
+                    var growth = row.cells[7].innerHTML;
+
+                    row.cells[2].innerHTML = (invested / holdings).toFixed(2);
+                    row.cells[5].innerHTML = (holdings * price).toFixed(2);
+
+                    average = row.cells[2].innerHTML;
+                    value = row.cells[5].innerHTML;
+
+                    BCHProfit = (value - invested).toFixed(2); // for total profit
+                    var profitDIV = document.getElementById("profitDiv");
+                    profitDIV.innerHTML = "Total profit = " + (parseInt(BTCProfit) + parseInt(BCHProfit));
+
+                    if(parseInt(value) >  parseInt(invested)){
+
+                        row.cells[6].innerHTML = "+" + (value - invested).toFixed(2);
+                        row.cells[7].innerHTML = ((((value - invested).toFixed(2)) / invested) * 100).toFixed(2) + "%";
+                        for(i=0;i<9;i++){
+                            row.cells[i].style.background = "LawnGreen";
+                        }
+                    }
+                    else{
+
+                        row.cells[6].innerHTML = "-" + (invested - value).toFixed(2);
+                        row.cells[7].innerHTML = "-" + ((((invested - value).toFixed(2)) / invested) * 100).toFixed(2) + "%";
+                        for(i=0;i<9;i++){
+                            row.cells[i].style.background = "Red";
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+
+</script>
+</html>
