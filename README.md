@@ -5,6 +5,6 @@ Aim of the project is to develop a tool to display the current value of a crypto
 
 Currently supports Bitcoin and Bitcoin Cash.
 
-Consumes APIs from 
+Consumes APIs from https://coinmarketcap.com/
 
 To use simply edit the cells for Invested and Holdings to match your portfolio
